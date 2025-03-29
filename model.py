@@ -87,6 +87,9 @@ class MLP(nn.Module):
     def forward(self, x):
         x = self.c_fc(x)
         x = self.gelu(x)
+        # print("Output of of GELU, size of x: ", x.size())
+        # print("Number of vlaues > 0: ", (x > 0).sum())
+        # print("Top ten values of x: ", x[:10])
         x = self.c_proj(x)
         x = self.dropout(x)
         return x
@@ -101,8 +104,11 @@ class Block(nn.Module):
         self.mlp = MLP(config)
 
     def forward(self, x):
+        # print("--------------------------------")
+
         x = x + self.attn(self.ln_1(x))
         x = x + self.mlp(self.ln_2(x))
+        # print("From forward of block, size of x: ", x.size())
         return x
 
 @dataclass
@@ -168,6 +174,8 @@ class GPT(nn.Module):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, idx, targets=None):
+
+        # print(" ++++ From Forward of GPT ++++")
         device = idx.device
         b, t = idx.size()
         assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
@@ -180,6 +188,10 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             x = block(x)
         x = self.transformer.ln_f(x)
+
+        # print("Post transformer, size of x: ", x.size())
+
+        # print("Shape of x[:, [-1], :]: ", x[:, [-1], :].size())
 
         if targets is not None:
             # if we are given some desired targets also calculate the loss
@@ -313,6 +325,9 @@ class GPT(nn.Module):
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
             # forward the model to get the logits for the index in the sequence
+
+            # print("================================================")
+            # print(f"Calling forward for {_} time and len of idx_cond: {idx_cond.size()}")
             logits, _ = self(idx_cond)
             # pluck the logits at the final step and scale by desired temperature
             logits = logits[:, -1, :] / temperature
