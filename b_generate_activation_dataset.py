@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-# python generate_activation_dataset.py --input_csv parcellation_datasets/test_1.csv --export_dir parcellation_datasets/test_1
+# python b_generate_activation_dataset.py --input_csv parcellation_datasets/test_1.csv --export_dir parcellation_datasets/test_1
+# python b_generate_activation_dataset.py --input_csv parcellation_datasets/test_1.csv --export_dir parcellation_datasets/test_1_small
+# python b_generate_activation_dataset.py --input_csv parcellation_datasets/test_1.csv --export_dir parcellation_datasets/test_1_medium --model_type gpt2-medium
 
 """
 Generate a dataset of GELU neuron activations for multiple prompts.
