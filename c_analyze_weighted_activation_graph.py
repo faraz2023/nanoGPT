@@ -189,7 +189,7 @@ def main():
         for u, v, data in G.edges(data=True):
              # Ensure original weight is non-negative before normalizing
             original_weight = max(0, data.get('co_activation_count', 0)) 
-            normalized_weight = np.float32(original_weight / max_edge_weight)
+            normalized_weight = np.float16(original_weight / max_edge_weight)
             G[u][v]['co_activation_count_normalized'] = normalized_weight
     else:
          # Set all to 0.0 if max_edge_weight is 0 (or graph has no edges)
@@ -205,113 +205,114 @@ def main():
                     G[u_set][v_set]['co_activation_count_normalized'] = np.float32(0.0)
          # If no edges, do nothing
             
-    # --- Generate Histograms --- 
-    print("Generating histograms...")
-    # Node activation count histogram
-    plot_histogram(
-        list(node_weights.values()), 
-        'Node Activation Count Distribution',
-        'Activation Count',
-        os.path.join(output_dir, 'node_activation_count_hist.png')
-    )
+    # # --- Generate Histograms --- 
+    # print("Generating histograms...")
+    # # Node activation count histogram
+    # plot_histogram(
+    #     list(node_weights.values()), 
+    #     'Node Activation Count Distribution',
+    #     'Activation Count',
+    #     os.path.join(output_dir, 'node_activation_count_hist.png')
+    # )
     
-    # Edge co-activation count histogram (Sampled)
-    print(f"Sampling up to {args.hist_sample_size} edges for histogram...")
-    num_edges = G.number_of_edges()
-    edge_weights_sample = []
-    negative_weights_found_warning = False # Flag for warning
-    if num_edges > 0:
-        sample_size = min(num_edges, args.hist_sample_size)
-        if sample_size < num_edges:
-             print(f"Warning: Sampling {sample_size} out of {num_edges} edges for histogram.")
-             # Efficiently sample edges if graph is large
-             # Convert G.edges to a list ONLY for sampling if necessary and feasible
-             try:
-                 all_edges = list(G.edges(data=True))
-                 sampled_edges = random.sample(all_edges, sample_size)
-                 for _, _, data in sampled_edges:
-                     weight = data.get('co_activation_count', 0)
-                     if weight < 0:
-                         if not negative_weights_found_warning:
-                             print("Warning: Negative co-activation counts detected in data, clamping to 0 for histogram.")
-                             negative_weights_found_warning = True
-                         weight = 0
-                     edge_weights_sample.append(weight)
-                 del all_edges # Clean up large list
-                 del sampled_edges
-                 gc.collect() 
-             except MemoryError:
-                  print("MemoryError during edge sampling preparation. Trying iterative sampling...")
-                  # Fallback iterative sampling (might be slow, less random)
-                  step = max(1, int(num_edges / sample_size)) # Ensure step is int
-                  count = 0
-                  for i, (_, _, data) in enumerate(G.edges(data=True)):
-                      if i % step == 0 and count < sample_size:
-                          weight = data.get('co_activation_count', 0)
-                          if weight < 0:
-                              if not negative_weights_found_warning:
-                                  print("Warning: Negative co-activation counts detected during iterative sampling, clamping to 0 for histogram.")
-                                  negative_weights_found_warning = True
-                              weight = 0
-                          edge_weights_sample.append(weight)
-                          count += 1
-                  print(f"Iterative sampling collected {count} weights.")
-        else:
-             # If sample size >= num_edges, just take all weights (if feasible)
-             print("Sample size >= number of edges. Using all edge weights for histogram.")
-             temp_weights_list = []
-             try:
-                 for _, _, data in G.edges(data=True):
-                      weight = data.get('co_activation_count', 0)
-                      if weight < 0:
-                          if not negative_weights_found_warning:
-                              print("Warning: Negative co-activation counts detected in data, clamping to 0 for histogram.")
-                              negative_weights_found_warning = True
-                          weight = 0
-                      temp_weights_list.append(weight)
-                 edge_weights_sample = temp_weights_list
-                 del temp_weights_list # Clean up
-                 gc.collect()
-             except MemoryError:
-                 print("MemoryError even when attempting to collect all edge weights. Histogram will be empty.")
-                 edge_weights_sample = [] # Fallback to empty if memory fails
-                 del temp_weights_list # Clean up
-                 gc.collect()
+    # # Edge co-activation count histogram (Sampled)
+    # print(f"Sampling up to {args.hist_sample_size} edges for histogram...")
+    # num_edges = G.number_of_edges()
+    # edge_weights_sample = []
+    # negative_weights_found_warning = False # Flag for warning
+    # if num_edges > 0:
+    #     sample_size = min(num_edges, args.hist_sample_size)
+    #     if sample_size < num_edges:
+    #          print(f"Warning: Sampling {sample_size} out of {num_edges} edges for histogram.")
+    #          # Efficiently sample edges if graph is large
+    #          # Convert G.edges to a list ONLY for sampling if necessary and feasible
+    #          try:
+    #              all_edges = list(G.edges(data=True))
+    #              sampled_edges = random.sample(all_edges, sample_size)
+    #              for _, _, data in sampled_edges:
+    #                  weight = data.get('co_activation_count', 0)
+    #                  if weight < 0:
+    #                      if not negative_weights_found_warning:
+    #                          print("Warning: Negative co-activation counts detected in data, clamping to 0 for histogram.")
+    #                          negative_weights_found_warning = True
+    #                      weight = 0
+    #                  edge_weights_sample.append(weight)
+    #              del all_edges # Clean up large list
+    #              del sampled_edges
+    #              gc.collect() 
+    #          except MemoryError:
+    #               print("MemoryError during edge sampling preparation. Trying iterative sampling...")
+    #               # Fallback iterative sampling (might be slow, less random)
+    #               step = max(1, int(num_edges / sample_size)) # Ensure step is int
+    #               count = 0
+    #               for i, (_, _, data) in enumerate(G.edges(data=True)):
+    #                   if i % step == 0 and count < sample_size:
+    #                       weight = data.get('co_activation_count', 0)
+    #                       if weight < 0:
+    #                           if not negative_weights_found_warning:
+    #                               print("Warning: Negative co-activation counts detected during iterative sampling, clamping to 0 for histogram.")
+    #                               negative_weights_found_warning = True
+    #                           weight = 0
+    #                       edge_weights_sample.append(weight)
+    #                       count += 1
+    #               print(f"Iterative sampling collected {count} weights.")
+    #     else:
+    #          # If sample size >= num_edges, just take all weights (if feasible)
+    #          print("Sample size >= number of edges. Using all edge weights for histogram.")
+    #          temp_weights_list = []
+    #          try:
+    #              for _, _, data in G.edges(data=True):
+    #                   weight = data.get('co_activation_count', 0)
+    #                   if weight < 0:
+    #                       if not negative_weights_found_warning:
+    #                           print("Warning: Negative co-activation counts detected in data, clamping to 0 for histogram.")
+    #                           negative_weights_found_warning = True
+    #                       weight = 0
+    #                   temp_weights_list.append(weight)
+    #              edge_weights_sample = temp_weights_list
+    #              del temp_weights_list # Clean up
+    #              gc.collect()
+    #          except MemoryError:
+    #              print("MemoryError even when attempting to collect all edge weights. Histogram will be empty.")
+    #              edge_weights_sample = [] # Fallback to empty if memory fails
+    #              del temp_weights_list # Clean up
+    #              gc.collect()
 
-    plot_histogram(
-        edge_weights_sample, # Use sampled list (with negatives clamped)
-        f'Edge Co-Activation Count Distribution (Sampled {len(edge_weights_sample)} edges)',
-        'Co-Activation Count',
-        os.path.join(output_dir, 'edge_co_activation_count_hist.png')
-    )
-    # Clean up sample list
-    del edge_weights_sample
-    gc.collect()
+    # plot_histogram(
+    #     edge_weights_sample, # Use sampled list (with negatives clamped)
+    #     f'Edge Co-Activation Count Distribution (Sampled {len(edge_weights_sample)} edges)',
+    #     'Co-Activation Count',
+    #     os.path.join(output_dir, 'edge_co_activation_count_hist.png')
+    # )
+    # # Clean up sample list
+    # del edge_weights_sample
+    # gc.collect()
     
     # Node degree histogram
-    print("Calculating node degrees...")
-    node_degrees = [d for n, d in G.degree()]
-    print("Plotting node degree histogram...")
-    plot_histogram(
-        node_degrees,
-        'Node Degree Distribution',
-        'Degree',
-        os.path.join(output_dir, 'node_degree_hist.png')
-    )
-    del node_degrees # Clean up degree list
-    gc.collect()
+    # print("Calculating node degrees...")
+    # node_degrees = [d for n, d in G.degree()]
+    # print("Plotting node degree histogram...")
+    # plot_histogram(
+    #     node_degrees,
+    #     'Node Degree Distribution',
+    #     'Degree',
+    #     os.path.join(output_dir, 'node_degree_hist.png')
+    # )
+    # del node_degrees # Clean up degree list
+    # gc.collect()
     
     # --- Save Graph with Normalized Attributes (BEFORE Thresholding) --- 
     updated_graph_path = os.path.join(output_dir, os.path.basename(args.input_path).replace('.gpickle', '_analyzed.gpickle'))
     print(f"Saving graph with normalized attributes (before thresholding) to {updated_graph_path}...")
-    # try:
-    #     with open(updated_graph_path, 'wb') as f:
-    #         pickle.dump(G, f)
-    #     print("Graph saved successfully.")
-    # except Exception as e:
-    #     print(f"Error saving graph file before thresholding: {e}")
-    #     # Optionally, decide if you want to proceed without saving
-    #     # return 
+    try:
+        with open(updated_graph_path, 'wb') as f:
+            pickle.dump(G, f)
+        print("Graph saved successfully.")
+        exit()
+    except Exception as e:
+        print(f"Error saving graph file before thresholding: {e}")
+        # Optionally, decide if you want to proceed without saving
+        # return 
 
     # --- Thresholding Analysis (Modifies G directly)--- 
     print("\nPerforming thresholding analysis (modifying graph G directly)...")
