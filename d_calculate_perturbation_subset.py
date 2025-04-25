@@ -10,19 +10,30 @@ calculates the degree of nodes in the resulting unweighted graph, and saves the 
 of the top k nodes (determined by a ratio 'r') to a NumPy file.
 
 Example usage:
+
+# works
 python d_calculate_perturbation_subset.py \
-    --input_graph_path parcellation_datasets/test_1/gpt2_weighted_graph.gpickle \
+    --input_graph_path parcellation_datasets/test_2/weighted_graph_analysis/gpt2_weighted_graph_analyzed.gpickle \
     --threshold 0.1 \
     --ratio 0.05 \
     --method degree \
-    --output_path parcellation_datasets/test_1/perturbation_subsets/gpt2_degree_t0.1_r0.05.npy
+    --output_path parcellation_datasets/test_2/perturbation_subsets/gpt2_degree_t0.1_r0.05.npy
 
 python d_calculate_perturbation_subset.py \
-    --input_graph_path parcellation_datasets/test_1/weighted_graph_analysis/gpt2_weighted_graph_analyzed.gpickle \
-    --threshold 0.1 \
-    --ratio 0.05 \
+    --input_graph_path parcellation_datasets/test_2/weighted_graph_analysis/gpt2_weighted_graph_analyzed.gpickle \
+    --threshold 0.8 \
+    --ratio 0.01 \
     --method degree \
-    --output_path parcellation_datasets/test_1/perturbation_subsets/gpt2_degree_t0.1_r0.05.npy
+    --output_path parcellation_datasets/test_2/perturbation_subsets/gpt2_degree_t0.8_r0.01.npy
+
+python d_calculate_perturbation_subset.py \
+    --input_graph_path parcellation_datasets/test_2/weighted_graph_analysis/gpt2_weighted_graph_analyzed.gpickle \
+    --threshold 0.8 \
+    --ratio 0.02 \
+    --method degree \
+    --output_path parcellation_datasets/test_2/perturbation_subsets/gpt2_degree_t0.8_r0.01.npy
+
+
 """
 
 import os
