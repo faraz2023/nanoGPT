@@ -289,14 +289,19 @@ class ActivationDatasetGenerator:
                 logits, _ = self.model(tokens_so_far)
                 
                 # Apply temperature
-                logits = logits[:, -1, :] / self.temperature
+                if self.temperature > 0.0:
+                    logits = logits[:, -1, :] / self.temperature
                 
-                # Apply softmax to convert logits to probabilities
-                probs = torch.nn.functional.softmax(logits, dim=-1)
-                
-                # Sample from distribution
-                next_token_id = torch.multinomial(probs, num_samples=1)
-                
+                    # Apply softmax to convert logits to probabilities
+                    probs = torch.nn.functional.softmax(logits, dim=-1)
+                    
+                    # Sample from distribution
+                    next_token_id = torch.multinomial(probs, num_samples=1)
+                    
+                else:
+                    # Greedy sampling
+                    next_token_id = torch.argmax(logits, dim=-1)
+
                 # Get the text for the predicted token
                 next_token_text = self.tokenizer.decode(next_token_id[0])
                 
@@ -374,11 +379,12 @@ def main():
                         help='GPT-2 model size to use')
     parser.add_argument('--seed', type=int, default=42,
                         help='Random seed for reproducibility')
-    parser.add_argument('--temperature', type=float, default=0.8,
+    parser.add_argument('--temperature', type=float, default=0.0,
                         help='Temperature for sampling (default: 0.8)')
     args = parser.parse_args()
     
     # Initialize dataset generator
+    # temperature should potentially be a inside CSV parameter to have samople level choice of temperature
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     generator = ActivationDatasetGenerator(
         model_type=args.model_type, 

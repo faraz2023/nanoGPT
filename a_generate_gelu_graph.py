@@ -4,6 +4,8 @@ Generate a graph representation of GELU activation neurons in the GPT model.
 The script creates:
 1. An edge list (.el) file representing connectivity between neurons
 2. A CSV file with node attributes (layer, neuron dimension)
+
+python a_generate_gelu_graph.py --model_type gpt2 --output_dir gelu_graph
 """
 
 import os
